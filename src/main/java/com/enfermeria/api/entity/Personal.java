@@ -32,7 +32,7 @@ public class Personal {
     public Personal() {
     }
 
-    // Constructor con parámetros 
+    // Constructor con parámetros
     public Personal(Long id, String nombre, String apellido, String turno, String telefono, String correo, String puesto) {
         this.id = id;
         this.nombre = nombre;
