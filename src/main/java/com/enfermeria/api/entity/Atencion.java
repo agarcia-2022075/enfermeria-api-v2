@@ -1,13 +1,8 @@
-package com.enfermeria.api.repository;
-
-import com.enfermeria.api.entity.Insumo;
-import org.springframework.data.jpa.repository.JpaRepository;
-
-public interface InsumoRepository extends JpaRepository<Insumo, Long> {
-}
+package com.enfermeria.api.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "atenciones")
@@ -17,32 +12,45 @@ public class Atencion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column
     private LocalDate fecha;
 
-    @Column(nullable = false, length = 200)
+    @Column
     private String motivo;
 
-    @Column(nullable = false, length = 500)
+    @Column
     private String diagnostico;
 
-    @Column(nullable = false, length = 500)
+    @Column
     private String tratamiento;
 
-    // Relación ManyToOne con Paciente
+    // --- MAGIA RELACIONAL ---
+
+    // Relación: Muchas atenciones pueden pertenecer a 1 Paciente
     @ManyToOne
-    @JoinColumn(name = "paciente_id", nullable = false)
+    @JoinColumn(name = "paciente_id", nullable = false) // Esto crea la Foreign Key 'paciente_id' en MySQL
     private Paciente paciente;
 
-    // Relación ManyToOne con PersonalEnfermeria
+    // Relación: Muchas atenciones pueden ser realizadas por 1 Personal (Enfermero/Doctor)
     @ManyToOne
-    @JoinColumn(name = "personal_id", nullable = false)
-    private PersonalEnfermeria personal;
+    @JoinColumn(name = "personal_id", nullable = false) // Esto crea la Foreign Key 'personal_id' en MySQL
+    private Personal personal;
 
-    // Constructor vacío obligatorio para JPA
-    public Atencion() {}
+    // Relación: Muchas atenciones pueden usar Muchos insumos (y viceversa)
+    @ManyToMany
+    @JoinTable(
+            name = "atencion_insumos", // Nombre de la tabla intermedia (Tabla Pivote) que se creará automáticamente
+            joinColumns = @JoinColumn(name = "atencion_id"), // La llave foránea que apunta a esta atención
+            inverseJoinColumns = @JoinColumn(name = "insumo_id") // La llave foránea que apunta al insumo
+    )
+    private List<Insumo> insumos;
 
-    // Getters y Setters
+    // Constructor vacío (Obligatorio para Spring Boot/JPA)
+    public Atencion() {
+    }
+
+    // --- GETTERS Y SETTERS ---
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -58,9 +66,13 @@ public class Atencion {
     public String getTratamiento() { return tratamiento; }
     public void setTratamiento(String tratamiento) { this.tratamiento = tratamiento; }
 
+    // Getters y Setters de los OBJETOS relacionados
     public Paciente getPaciente() { return paciente; }
     public void setPaciente(Paciente paciente) { this.paciente = paciente; }
 
-    public PersonalEnfermeria getPersonal() { return personal; }
-    public void setPersonal(PersonalEnfermeria personal) { this.personal = personal; }
+    public Personal getPersonal() { return personal; }
+    public void setPersonal(Personal personal) { this.personal = personal; }
+
+    public List<Insumo> getInsumos() { return insumos; }
+    public void setInsumos(List<Insumo> insumos) { this.insumos = insumos; }
 }

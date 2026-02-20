@@ -1,11 +1,12 @@
 package com.enfermeria.api.repository;
 
-import com.enfermeria.enfermeria_app.entity.Atencion;
-import com.enfermeria.enfermeria_app.entity.Paciente;
-import com.enfermeria.enfermeria_app.entity.PersonalEnfermeria;
+import com.enfermeria.api.entity.Atencion;
+import com.enfermeria.api.entity.Paciente;
+import com.enfermeria.api.entity.Personal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public interface AtencionRepository extends JpaRepository<Atencion, Long> {
     List<Atencion> findByPacienteId(@Param("pacienteId") Long pacienteId);
 
     // Buscar atenciones por objeto PersonalEnfermeria completo
-    List<Atencion> findByPersonal(PersonalEnfermeria personal);
+    List<Atencion> findByPersonal(Personal personal);
 
     // Buscar atenciones por ID de personal (versión con @Query)
     @Query("SELECT a FROM Atencion a WHERE a.personal.id = :personalId")
