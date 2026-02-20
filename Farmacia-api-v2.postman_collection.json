@@ -1,0 +1,128 @@
+{
+  "info": {
+    "_postman_id": "ace48376-0ab5-46a4-bf1e-0d61be24c470",
+    "name": "Farmacia -app",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52312173",
+    "_collection_link": "https://go.postman.co/collection/52312173-ace48376-0ab5-46a4-bf1e-0d61be24c470?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "http://localhost:8080/insumos/1",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/insumos/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "insumos",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:8080/insumos/1",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"nombre\": \"Paracetamol 500mg\",\r\n    \"tipo\": \"Medicamento\",\r\n    \"cantidad\": 150,\r\n    \"fechaVencimiento\": \"2026-06-30\",\r\n    \"proveedor\": \"Farmalisto Plus\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/insumos/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "insumos",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:8080/insumos/1",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/insumos/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "insumos",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:8080/insumos",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/insumos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "insumos"
+          ]
+        },
+        "description": "lista todo"
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:8080/insumos",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"nombre\": \"Paracetamol\",\r\n    \"tipo\": \"Medicamento\",\r\n    \"cantidad\": 100,\r\n    \"fechaVencimiento\": \"2025-12-31\",\r\n    \"proveedor\": \"Farmalisto\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/insumos",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "insumos"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
