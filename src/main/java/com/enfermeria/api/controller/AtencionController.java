@@ -8,12 +8,13 @@ import com.enfermeria.api.repository.AtencionRepository;
 import com.enfermeria.api.repository.PacienteRepository;
 import com.enfermeria.api.repository.PersonalRepository;
 import com.enfermeria.api.repository.InsumoRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/atenciones")
@@ -24,6 +25,7 @@ public class AtencionController {
     private final PersonalRepository personalRepo;
     private final InsumoRepository insumoRepo;
 
+    // Constructor con inyección de dependencias
     public AtencionController(AtencionRepository atencionRepo,
                               PacienteRepository pacienteRepo,
                               PersonalRepository personalRepo,
@@ -34,79 +36,146 @@ public class AtencionController {
         this.insumoRepo = insumoRepo;
     }
 
-    // 1. LISTAR TODAS LAS ATENCIONES
+
     @GetMapping
     public List<Atencion> listar() {
         return atencionRepo.findAll();
     }
 
-    // 2. BUSCAR ATENCIÓN POR ID
+
     @GetMapping("/{id}")
-    public Optional<Atencion> buscarPorId(@PathVariable Long id) {
-        return atencionRepo.findById(id);
+    public ResponseEntity<Atencion> obtenerPorId(@PathVariable Long id) {
+        return atencionRepo.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    // 3. GUARDAR ATENCIÓN
+
     @PostMapping
-    public Atencion guardar(@RequestBody Map<String, Object> datos) {
-        Atencion nuevaAtencion = new Atencion();
+    public ResponseEntity<?> guardar(@RequestBody Map<String, Object> datos) {
+        try {
+            Atencion nuevaAtencion = new Atencion();
 
-        nuevaAtencion.setMotivo((String) datos.get("motivo"));
-        nuevaAtencion.setDiagnostico((String) datos.get("diagnostico"));
-        nuevaAtencion.setTratamiento((String) datos.get("tratamiento"));
+            // Campos básicos
+            nuevaAtencion.setMotivo((String) datos.get("motivo"));
+            nuevaAtencion.setDiagnostico((String) datos.get("diagnostico"));
+            nuevaAtencion.setTratamiento((String) datos.get("tratamiento"));
 
-        if (datos.get("fecha") != null) {
-            nuevaAtencion.setFecha(LocalDate.parse((String) datos.get("fecha")));
+            if (datos.get("fecha") != null) {
+                nuevaAtencion.setFecha(LocalDate.parse((String) datos.get("fecha")));
+            }
+
+            // Asignar paciente
+            if (datos.containsKey("pacienteId")) {
+                Long pacienteId = Long.valueOf(datos.get("pacienteId").toString());
+                Paciente p = pacienteRepo.findById(pacienteId)
+                        .orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + pacienteId));
+                nuevaAtencion.setPaciente(p);
+            }
+
+            // Asignar personal/enfermero
+            if (datos.containsKey("enfermeroId")) {
+                Long enfermeroId = Long.valueOf(datos.get("enfermeroId").toString());
+                Personal per = personalRepo.findById(enfermeroId)
+                        .orElseThrow(() -> new RuntimeException("Personal no encontrado con ID: " + enfermeroId));
+                nuevaAtencion.setPersonal(per);
+            }
+
+            // Asignar insumos
+            if (datos.containsKey("insumoIds") && datos.get("insumoIds") != null) {
+                List<Integer> idsRaw = (List<Integer>) datos.get("insumoIds");
+                List<Long> ids = idsRaw.stream().map(Integer::longValue).toList();
+                List<Insumo> listaInsumos = insumoRepo.findAllById(ids);
+                nuevaAtencion.setInsumos(listaInsumos);
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(atencionRepo.save(nuevaAtencion));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al guardar: " + e.getMessage());
         }
-
-        Long pacienteId = Long.valueOf(datos.get("pacienteId").toString());
-        nuevaAtencion.setPaciente(pacienteRepo.findById(pacienteId).get());
-
-        Long enfermeroId = Long.valueOf(datos.get("enfermeroId").toString());
-        nuevaAtencion.setPersonal(personalRepo.findById(enfermeroId).get());
-
-        if (datos.get("insumoIds") != null) {
-            List<Integer> idsRaw = (List<Integer>) datos.get("insumoIds");
-            List<Long> ids = idsRaw.stream().map(Integer::longValue).toList();
-            nuevaAtencion.setInsumos(insumoRepo.findAllById(ids));
-        }
-
-        return atencionRepo.save(nuevaAtencion);
     }
 
-    // 4. ACTUALIZAR ATENCIÓN
+
     @PutMapping("/{id}")
-    public Atencion actualizar(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
-        // Buscamos la atención existente y la sobreescribimos
-        Atencion atencion = atencionRepo.findById(id).get();
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
+        try {
+            // Buscar la atención existente
+            Atencion atencionExistente = atencionRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Atención no encontrada con ID: " + id));
 
-        atencion.setMotivo((String) datos.get("motivo"));
-        atencion.setDiagnostico((String) datos.get("diagnostico"));
-        atencion.setTratamiento((String) datos.get("tratamiento"));
+            // Actualizar campos básicos (solo si vienen en el JSON)
+            if (datos.containsKey("motivo")) {
+                atencionExistente.setMotivo((String) datos.get("motivo"));
+            }
+            if (datos.containsKey("diagnostico")) {
+                atencionExistente.setDiagnostico((String) datos.get("diagnostico"));
+            }
+            if (datos.containsKey("tratamiento")) {
+                atencionExistente.setTratamiento((String) datos.get("tratamiento"));
+            }
+            if (datos.containsKey("fecha")) {
+                atencionExistente.setFecha(LocalDate.parse((String) datos.get("fecha")));
+            }
 
-        if (datos.get("fecha") != null) {
-            atencion.setFecha(LocalDate.parse((String) datos.get("fecha")));
+            // Actualizar paciente
+            if (datos.containsKey("pacienteId")) {
+                Long pacienteId = Long.valueOf(datos.get("pacienteId").toString());
+                Paciente p = pacienteRepo.findById(pacienteId)
+                        .orElseThrow(() -> new RuntimeException("Paciente no encontrado con ID: " + pacienteId));
+                atencionExistente.setPaciente(p);
+            }
+
+            // Actualizar personal/enfermero
+            if (datos.containsKey("enfermeroId")) {
+                Long enfermeroId = Long.valueOf(datos.get("enfermeroId").toString());
+                Personal per = personalRepo.findById(enfermeroId)
+                        .orElseThrow(() -> new RuntimeException("Personal no encontrado con ID: " + enfermeroId));
+                atencionExistente.setPersonal(per);
+            }
+
+            // Actualizar insumos
+            if (datos.containsKey("insumoIds") && datos.get("insumoIds") != null) {
+                List<Integer> idsRaw = (List<Integer>) datos.get("insumoIds");
+                List<Long> ids = idsRaw.stream().map(Integer::longValue).toList();
+                List<Insumo> listaInsumos = insumoRepo.findAllById(ids);
+                atencionExistente.setInsumos(listaInsumos);
+            }
+
+            // Guardar cambios
+            return ResponseEntity.ok(atencionRepo.save(atencionExistente));
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al actualizar: " + e.getMessage());
         }
-
-        Long pacienteId = Long.valueOf(datos.get("pacienteId").toString());
-        atencion.setPaciente(pacienteRepo.findById(pacienteId).get());
-
-        Long enfermeroId = Long.valueOf(datos.get("enfermeroId").toString());
-        atencion.setPersonal(personalRepo.findById(enfermeroId).get());
-
-        if (datos.get("insumoIds") != null) {
-            List<Integer> idsRaw = (List<Integer>) datos.get("insumoIds");
-            List<Long> ids = idsRaw.stream().map(Integer::longValue).toList();
-            atencion.setInsumos(insumoRepo.findAllById(ids));
-        }
-
-        return atencionRepo.save(atencion);
     }
 
-    // 5. ELIMINAR ATENCIÓN
+
     @DeleteMapping("/{id}")
-    public String eliminar(@PathVariable Long id) {
-        atencionRepo.deleteById(id);
-        return "Atención eliminada correctamente";
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        if (atencionRepo.existsById(id)) {
+            atencionRepo.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
+    @GetMapping("/paciente/{pacienteId}")
+    public List<Atencion> listarPorPaciente(@PathVariable Long pacienteId) {
+        return atencionRepo.findByPacienteId(pacienteId);
+    }
+
+
+    @GetMapping("/personal/{personalId}")
+    public List<Atencion> listarPorPersonal(@PathVariable Long personalId) {
+        return atencionRepo.findByPersonalId(personalId);
+    }
+
+
+    @GetMapping("/fecha/{fecha}")
+    public List<Atencion> listarPorFecha(@PathVariable String fecha) {
+        LocalDate fechaBuscar = LocalDate.parse(fecha);
+        return atencionRepo.findByFecha(fechaBuscar);
     }
 }
