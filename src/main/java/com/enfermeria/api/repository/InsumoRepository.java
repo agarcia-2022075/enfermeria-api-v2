@@ -1,7 +1,7 @@
-package com.enfermeria.enfermeria_app.repository;
+package com.enfermeria.api.repository;
 
-import com.enfermeria.enfermeria_app.entity.Insumo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.enfermeria.api.entity.Insumo;
 
 public interface InsumoRepository extends JpaRepository<Insumo, Long> {
 }

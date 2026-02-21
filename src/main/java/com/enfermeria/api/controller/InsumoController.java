@@ -1,7 +1,7 @@
 package com.enfermeria.api.controller;
 
-import com.enfermeria.enfermeria_app.entity.Insumo;
-import com.enfermeria.enfermeria_app.repository.InsumoRepository;
+import com.enfermeria.api.repository.InsumoRepository;
+import com.enfermeria.api.entity.Insumo;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
